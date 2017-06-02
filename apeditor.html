@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Edit Active Projects</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/3.18/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.18/esri/css/esri.css">
+    <style>
+      html,body{height:100%;width:100%;margin:0;overflow:hidden;}
+      #map{
+        padding:0;
+      }
+      #header{
+        font-size: 1.1em;
+        font-family: sans-serif;
+        padding-left: 1em;
+        padding-top:4px;
+        color:#660000;
+      }
+      .templatePicker {
+        border: none;
+      }
+
+      .dj_ie .infowindow .window .top .right .user .content { position: relative; }
+      .dj_ie .simpleInfoWindow .content { position: relative; }
+    </style>
+
+    <script src="https://js.arcgis.com/3.20/"></script>
+    <script>
+      var map;
+
+      require([
+        "esri/map",
+        "esri/tasks/GeometryService",
+
+        "esri/layers/ArcGISTiledMapServiceLayer",
+        "esri/layers/ArcGISDynamicMapServiceLayer",
+        "esri/layers/FeatureLayer",
+		"esri/dijit/AttributeInspector",
+
+        "esri/Color",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/symbols/SimpleLineSymbol",
+
+        "esri/dijit/editing/Editor",
+        "esri/dijit/editing/TemplatePicker",
+		
+		"dijit/form/Button",
+		"dojo/dom-construct",
+
+        "esri/config",
+        "dojo/i18n!esri/nls/jsapi",
+
+        "dojo/_base/array", "dojo/parser", "dojo/keys",
+        "dijit/layout/BorderContainer", "dijit/layout/ContentPane",
+		
+
+		
+        "dojo/domReady!"
+      ], function(
+        Map, GeometryService,
+        ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer, FeatureLayer, AttributeInspector, 
+        Color, SimpleMarkerSymbol, SimpleLineSymbol,
+        Editor, TemplatePicker,
+		Button, domConstruct,
+        esriConfig, jsapiBundle,
+        arrayUtils, parser, keys, 
+		BorderContainer, ContentPane
+      ) {
+        parser.parse();
+
+        // snapping is enabled for this sample - change the tooltip to reflect this
+        jsapiBundle.toolbars.draw.start = jsapiBundle.toolbars.draw.start +  "<br>Press <b>ALT</b> to enable snapping";
+
+        // refer to "Using the Proxy Page" for more information:  https://developers.arcgis.com/javascript/3/jshelp/ags_proxy.html
+        esriConfig.defaults.io.proxyUrl = "/proxy/";
+
+        //This service is for development and testing purposes only. We recommend that you create your own geometry service for use within your applications.
+        esriConfig.defaults.geometryService = new GeometryService("https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer");
+
+        map = new Map("map", {
+//          basemap: "streets",
+          center: [-90.573366, 38.657267],
+          zoom: 2,
+//		  scale: 9000,
+          slider: false
+        });
+		
+//		var myEditor;
+
+		
+        map.on("layers-add-result", initEditor);
+        
+        //add boundaries and place names
+        var labels = new ArcGISTiledMapServiceLayer("http://mapping.chesterfield.mo.us/arcgis/rest/services/GeneralPurpose1/MapServer");
+        map.addLayer(labels);
+
+		var parcel = new ArcGISDynamicMapServiceLayer("https://webgis.chesterfield.mo.us/secure/rest/services/NewParcel/MapServer");
+		map.addLayer(parcel);
+		
+        var responsePoints = new FeatureLayer("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Wildfire/FeatureServer/0", {
+          mode: FeatureLayer.MODE_ONDEMAND,
+          outFields: ['*']
+        });
+
+//        var responsePolys = new FeatureLayer("https://mapping.chesterfield.mo.us/secure/rest/services/Plan/APTest/FeatureServer/0", {
+        var responsePolys = new FeatureLayer("https://mapping.chesterfield.mo.us/secure/rest/services/Plan/APTestCentroid/FeatureServer/0", {
+          mode: FeatureLayer.MODE_ONDEMAND,
+          outFields: ['*']
+        });
+
+		responsePolys.on("add-attachment-complete", function(fer){
+			console.log('attach');
+			console.log(fer.result);
+			var t2 = document.getElementById('dijit_form_ValidationTextBox_2').value;//console.log(t2);
+			var t3 = document.getElementById('dijit_form_ValidationTextBox_3').value;//console.log(t3);
+			if(t2 === ""){
+				console.log("textbox2 is empty");
+				document.getElementById('dijit_form_ValidationTextBox_2').value = 'https://mapping.chesterfield.mo.us/secure/rest/services/Plan/APTestCentroid/FeatureServer/0/'+fer.result.objectId+'/attachments/'+fer.result.attachmentId;
+				
+			}
+			else if(t3 == ""){
+				document.getElementById('dijit_form_ValidationTextBox_3').value = "https://mapping.chesterfield.mo.us/secure/rest/services/Plan/APTestCentroid/FeatureServer/0/"+fer.result.objectId+"/attachments/"+fer.result.attachmentId;
+				console.log("textbox3 is empty");
+			}
+			
+		});
+        map.addLayers([responsePolys]);
+
+        function initEditor(evt) {
+          var templateLayers = arrayUtils.map(evt.layers, function(result){
+            return result.layer;
+          });
+          var templatePicker = new TemplatePicker({
+            featureLayers: templateLayers,
+            grouping: false,
+//			style: '{width: "400px", height:"300px"}',
+//            showTooltip: true,
+            rows: "3",
+            columns: 3
+          }, "templateDiv");
+          templatePicker.startup();
+
+          var layers = arrayUtils.map(evt.layers, function(result) {
+            return { featureLayer: result.layer,
+			'fieldInfos':[
+            {'fieldName':'proj_name','label':'Name'},
+            {'fieldName':'Status','label':'Status'},
+            {'fieldName':'Description','label':'Description'},
+            {'fieldName':'pic_url','label':'Pic URL'},
+            {'fieldName':'thumb_url','label':'Thumb URL'},	//, 'isEditable': false
+            {'fieldName':'IS_VIDEO','label':'Is Video'},
+            {'fieldName':'Icon_color','label':'Icon color'},
+            {'fieldName':'DevelopmentStatus','label':'Development Status'},
+            {'fieldName':'project_details','label':'Details', 'stringFieldOption':esri.dijit.AttributeInspector.STRING_FIELD_OPTION_TEXTAREA},
+			]
+
+			};
+          });
+          var settings = {
+            map: map,
+            templatePicker: templatePicker,
+            layerInfos: layers,
+//            toolbarVisible: true,
+//            enableUndoRedo: true,
+            createOptions: {
+              polylineDrawTools:[ Editor.CREATE_TOOL_FREEHAND_POLYLINE ],
+              polygonDrawTools: [ Editor.CREATE_TOOL_FREEHAND_POLYGON,
+                Editor.CREATE_TOOL_CIRCLE,
+                Editor.CREATE_TOOL_TRIANGLE,
+                Editor.CREATE_TOOL_RECTANGLE
+              ]
+            },
+            toolbarOptions: {
+//              cutVisible: true,
+			  reshapeVisible: true
+            }
+          };
+
+  
+          var params = { settings: settings };
+          myEditor = new Editor(params, 'editorDiv');
+		  
+          //define snapping options
+          var symbol = new SimpleMarkerSymbol(
+            SimpleMarkerSymbol.STYLE_CROSS,
+            15,
+            new SimpleLineSymbol(
+              SimpleLineSymbol.STYLE_SOLID,
+              new Color([255, 0, 0, 0.5]),
+              5
+            ),
+            null
+          );
+          map.enableSnapping({
+            snapPointSymbol: symbol,
+            tolerance: 20,
+            snapKey: keys.ALT
+          });
+		
+          myEditor.startup();
+		  
+/*		  myEditor.on("load", function(){
+			  console.log('before loaded');
+			  var saveButton = new dijit.form.Button({ label: "Save", "class": "saveButton"}, domConstruct.create("div"));
+			  domConstruct.place(saveButton.domNode, myEditor.attInspector.deleteBtn.domNode, "before");
+			  console.log('loaded');
+		  });
+*/		  
+/*		myEditor.attributeInspector.deleteBtn.domNode.style = "visibility: hidden";
+		  
+			  var saveButton = new dijit.form.Button({ label: "Save", "class": "saveButton", onClick: function(){ console.log('save'); map.infoWindow.hide();}}, domConstruct.create("div"));
+			  console.log(saveButton.domNode);
+			  //myEditor.attributeInspector.deleteBtn.domNode.appendChild(saveButton.domNode);
+			  myEditor.attributeInspector.editButtons.appendChild(saveButton.domNode);
+			  //domConstruct.place(saveButton.domNode, myEditor.attInspector.deleteBtn.domNode, "after");
+			  myEditor.attributeInspector.deleteBtn.domNode.style = "visibility: hidden";
+*/			  
+        }
+      });
+    </script>
+  </head>
+  <body class="claro">
+<h2 class="subtitle" tabindex="0" style=""><img src="http://missioncity.maps.arcgis.com/sharing/rest/content/items/d248dca821804cf6a545b4e590b1a092/data" style="width: 447px; height: 30px; outline: none;background-color: black;"></h2>  
+    <div id="main" data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'headline'" style="height:width:100%;height:100%;margin: 0;">
+<!--      <div data-dojo-type="dijit/layout/ContentPane" id="header" data-dojo-props="region:'top'">
+        Edit AP
+      </div>
+-->      <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="height: 65px;overflow:hidden;">
+        <div id="templateDiv"></div>
+        <div id="editorDiv"></div>
+      </div>
+      <div data-dojo-type="dijit/layout/ContentPane" id="map" data-dojo-props="region:'center'"></div>
+    </div>
+  </body>
+</html>
