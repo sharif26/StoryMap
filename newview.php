@@ -4,65 +4,22 @@
 
 </head>
 <body>
-<!--
-<div>
-<ul style="list-style:none; ">
-<li class="horizontal"><a class="current" href="javascript:void(0);" title="All">All</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-NonAlpha" title="#">#</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-A" title="A">A</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-B" title="B">B</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-C" title="C">C</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-D" title="D">D</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-E" title="E">E</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-F" title="F">F</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-G" title="G">G</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-H" title="H">H</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-I" title="I">I</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-J" title="J">J</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-K" title="K">K</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-L" title="L">L</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-M" title="M">M</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-N" title="N">N</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-O" title="O">O</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-P" title="P">P</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-Q" title="Q">Q</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-R" title="R">R</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-S" title="S">S</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-T" title="T">T</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-U" title="U">U</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-V" title="V">V</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-W" title="W">W</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-X" title="X">X</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-Y" title="Y">Y</a></li>
-<li class="horizontal"><a class="" href="/businesses/development-projects-story-map/development-projects-list/-alpha-Z" title="Z">Z</a></li>
-</ul>
-</div>
--->
+
 </body>
 <?
 //ini_set("display_errors","1");
 //error_reporting(E_ALL ^ E_NOTICE);		
 
 //echo "hello world!<br />";	 <link href="../css/viewAP.css" rel="stylesheet" type="text/css" />  <script type="text/javascript" src="https://www.chesterfield.mo.us/cmss_files/js/viewActiveProjects.js"></script>
-$db2 = mssql_connect("sde101.chesterfield.mo.us","webreader","w3br3ad3r!");
+$db2 = mssql_connect("","","");		//credentials removed
 $dbName = "[APTest]";
 //echo "hello world";
 
-//$where = '';
-//if(isset($_REQUEST['pid']))
-//	$where = ' and P.project_id='.$_REQUEST['pid'];
-
 if(!isset($_REQUEST['pid'])){
-/*	$q = "SELECT distinct PP.project_location, P.proj_name, P.thumb_url, P.OBJECTID, P.project_id, P.Description
-	  FROM $dbName.[dbo].[PROJ_PROJECT] AS PP LEFT JOIN $dbName.[dbo].[PROJECTBOUNDARYORIG] AS P
-	  ON PP.Parent_ID = P.proj_name
-	  where P.Status = 'active' and P.proj_name IS NOT NULL 
-	  order by P.OBJECTID ";
-*/	  
-	  $q = "SELECT * FROM 
-[APTest].[dbo].[PROJECTBOUNDARYORIG] AS P  
+	  
+	  $q = "SELECT * FROM TABLE_NAME AS P  
 WHERE P.Status = 'active' 
-order by P.OBJECTID ";
+order by P.OBJECTID ";		//TABLE_NAME removed
 	  
 	$qry = mssql_query( $q );
 
@@ -102,10 +59,7 @@ else{
 	$where = ' and P.OBJECTID='.$_REQUEST['pid'];
 	$count = $_REQUEST['index'];
 
-	$q = "SELECT distinct PP.project_location, PP.project_ward, P.proj_name, P.OBJECTID, P.project_id, P.thumb_url, P.pic_url, P.project_details, P.DevelopmentStatus
-		  FROM $dbName.[dbo].[PROJ_PROJECT] AS PP LEFT JOIN $dbName.[dbo].[PROJECTBOUNDARYORIG] AS P
-		  ON PP.Parent_ID = P.proj_name
-		  where PP.project_active = 'active' $where";
+	$q = "  where PP.project_active = 'active' $where";	//query modified
 
 	$qry = mssql_query( $q );
 
@@ -146,16 +100,7 @@ else{
 
 
 	
-	$q = "  SELECT  *, PP.project_id AS projid, planner.planner_name AS pname, planner.planner_email AS pemail, city_engineer.planner_name AS cname, city_engineer.planner_email AS cemail, PT.type_name
-		  FROM $dbName.[dbo].[PROJ_PROJECT] AS PP LEFT JOIN $dbName.[dbo].[PROJECTBOUNDARYORIG] AS P
-		  ON PP.Parent_ID = P.proj_name
-		  INNER JOIN $dbName.[dbo].PROJ_TYPE AS PT ON PT.type_id=PP.type_id
-		LEFT JOIN $dbName.[dbo].[proj_planner] AS planner
-		ON planner.[planner_id] = PP.[planner_id]
-		LEFT JOIN $dbName.[dbo].[proj_planner] AS city_engineer
-		ON city_engineer.planner_id = PP.[city_engineer_id]		  
-		  
-		  where PP.project_active = 'active' $where";
+	$q = "";	//query removed
 	$qry = mssql_query( $q );	
 	
 	echo '<ul class="accord">';
